@@ -10,6 +10,14 @@
       sleep 2;
     done
 
+    # Wait for OpenStackControlPlane to be fully removed, then cleanup
+    # OpenStackVersion. This order matters because the controlplane
+    # controller auto-creates an OpenStackVersion with the same name,
+    # so deleting it before the controlplane is gone could cause it to
+    # be re-created.
+    oc wait openstackcontrolplane --all --for=delete --timeout=300s 2>/dev/null || true
+    oc delete --ignore-not-found=true OpenStackVersion --all || true
+
     # Cleanup OpenStackDataplane objects
     oc delete --ignore-not-found=true OpenStackDataPlaneDeployment --all || true
     oc delete --ignore-not-found=true OpenStackDataPlaneNodeSet --all || true
